@@ -1,0 +1,48 @@
+Query string:
+ LET lat=( return AVERAGE(FOR zap IN wifiQuebec RETURN zap.LATITUDE) )
+ LET lon=( return AVERAGE(FOR zap IN wifiQuebec RETURN zap.LONGITUDE) )
+ FOR zap IN NEAR(wifiQuebec,lat[0],lon[0],5,"distance")
+ SORT zap.dist ASC
+ RETURN {
+   "zap":zap.NOM_BATI,
+   "distance":FLOOR(zap.distance)
+ }
+
+Execution plan:
+ Id   NodeType                  Est.   Comment
+  1   SingletonNode                1   * ROOT
+ 10   SubqueryNode                 1     - LET lat = ...   /* const subquery */
+  2   SingletonNode                1       * ROOT
+  7   SubqueryNode                 1         - LET #1 = ...   /* const subquery */
+  3   SingletonNode                1           * ROOT
+  4   EnumerateCollectionNode     50             - FOR zap IN wifiQuebec   /* full collection scan */
+  5   CalculationNode             50               - LET #13 = zap.`LATITUDE`   /* attribute expression */   /* collections used: zap : wifiQuebec */
+  6   ReturnNode                  50               - RETURN #13
+  8   CalculationNode              1         - LET #15 = AVERAGE(#1)   /* simple expression */
+  9   ReturnNode                   1         - RETURN #15
+ 19   SubqueryNode                 1     - LET lon = ...   /* const subquery */
+ 11   SingletonNode                1       * ROOT
+ 16   SubqueryNode                 1         - LET #7 = ...   /* const subquery */
+ 12   SingletonNode                1           * ROOT
+ 13   EnumerateCollectionNode     50             - FOR zap IN wifiQuebec   /* full collection scan */
+ 14   CalculationNode             50               - LET #17 = zap.`LONGITUDE`   /* attribute expression */   /* collections used: zap : wifiQuebec */
+ 15   ReturnNode                  50               - RETURN #17
+ 17   CalculationNode              1         - LET #19 = AVERAGE(#7)   /* simple expression */
+ 18   ReturnNode                   1         - RETURN #19
+ 20   CalculationNode              1     - LET #21 = NEAR(wifiQuebec   /* all collection documents */, lat[0], lon[0], 5, "distance")   /* simple expression */
+ 21   EnumerateListNode          100     - FOR zap IN #21   /* list iteration */
+ 22   CalculationNode            100       - LET #23 = zap.`dist`   /* attribute expression */
+ 23   SortNode                   100       - SORT #23 ASC
+ 24   CalculationNode            100       - LET #25 = { "zap" : zap.`NOM_BATI`, "distance" : FLOOR(zap.`distance`) }   /* simple expression */
+ 25   ReturnNode                 100       - RETURN #25
+
+Indexes used:
+ none
+
+Optimization rules applied:
+ Id   RuleName
+  1   move-calculations-up
+  2   move-calculations-up-2
+  3   move-calculations-down
+
+
