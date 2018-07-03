@@ -1,0 +1,15 @@
+LET lat=( return AVERAGE(FOR zap IN wifiQuebec RETURN zap.LATITUDE) )
+LET lon=( return AVERAGE(FOR zap IN wifiQuebec RETURN zap.LONGITUDE) )
+FOR zap IN NEAR(wifiQuebec,lat[0],lon[0],5,"distance")
+SORT zap.dist ASC
+RETURN {
+  "zap":zap.NOM_BATI,
+  "distance":FLOOR(zap.distance)
+}
+
+
+/* Please insert some value for the @@collection bind parameter */
+FOR doc IN wifiQuebec
+  SORT RAND()
+  LIMIT 1
+  RETURN doc
